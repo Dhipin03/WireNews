@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "188038404979",
+    "project_id": "wirenews-17f35",
+    "storage_bucket": "wirenews-17f35.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:188038404979:android:fe99b04140e1a9b71b0306",
+        "android_client_info": {
+          "package_name": "com.example.wirenews"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGTscXCEJ8N4LWcKqjIeOSj7wemH_C2-U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
