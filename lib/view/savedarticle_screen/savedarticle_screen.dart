@@ -40,45 +40,72 @@ class _SavedarticleScreenState extends State<SavedarticleScreen> {
         stream: _usersStream,
         builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (snapshot.hasError) {
-            return const Text('Something went wrong');
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Error loading saved articles:\n${snapshot.error}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            );
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Text("Loading");
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final docs = snapshot.data?.docs ?? [];
+          if (docs.isEmpty) {
+            return const Center(
+              child: Text(
+                'No saved articles yet.',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            );
           }
 
           return ListView.separated(
-            itemCount: snapshot.data?.docs.length ?? 0,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            itemCount: docs.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
-              final article = snapshot.data!.docs;
+              final doc = docs[index];
+              final data = doc.data() as Map<String, dynamic>? ?? {};
+              final String url = data['url'] ?? '';
+              final String content = data['content'] ?? '';
+              final String title = data['title'] ?? 'No Title';
+              final String imgurl = data['imgurl'] ?? '';
+              final String author = data['author'] ?? '';
+
               return Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: InkWell(
                   onTap: () {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BlogviewScreen(
-                              url: article[index]['url'],
-                              content: article[index]['content'],
-                              title: article[index]['title'],
-                              imgurl: article[index]['imgurl'],
-                              author: article[index]['author']),
-                        ));
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => BlogviewScreen(
+                          url: url,
+                          content: content,
+                          title: title,
+                          imgurl: imgurl,
+                          author: author,
+                        ),
+                      ),
+                    );
                   },
                   child: NewscardWidget(
-                      id: article[index].id,
-                      deletebutton: true,
-                      author: article[index]['author'],
-                      imgurl: article[index]['imgurl'],
-                      title: article[index]['title']),
+                    id: doc.id,
+                    deletebutton: true,
+                    author: author,
+                    imgurl: imgurl,
+                    title: title,
+                  ),
                 ),
               );
             },
-            separatorBuilder: (context, index) => SizedBox(
-              height: 10,
-            ),
           );
         },
       ),

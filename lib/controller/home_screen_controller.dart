@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 import 'package:wirenews/model/home_screen_model.dart';
+import 'package:wirenews/service/api_service.dart';
 
 class HomeScreenController with ChangeNotifier {
+  final ApiService apiService = ApiService();
   bool issaved = false;
   int selectedindex = 0;
   bool issearckclicked = false;
@@ -30,20 +32,53 @@ class HomeScreenController with ChangeNotifier {
   }
 
   Future<bool> isDuplicate(
-      {required String title,
-      required String imgurl,
-      required String content,
-      required String author}) async {
-    QuerySnapshot querySnapshot = await articlelist
-        .where('title', isEqualTo: title)
-        .where('imgurl', isEqualTo: imgurl)
-        .where('content', isEqualTo: content)
-        .where('author', isEqualTo: author)
-        .get();
-    return querySnapshot.docs.isNotEmpty;
+      {required String title, required String url}) async {
+    try {
+      if (url.isNotEmpty) {
+        QuerySnapshot querySnapshot =
+            await articlelist.where('url', isEqualTo: url).get();
+        if (querySnapshot.docs.isNotEmpty) return true;
+      }
+      if (title.isNotEmpty) {
+        QuerySnapshot querySnapshot =
+            await articlelist.where('title', isEqualTo: title).get();
+        if (querySnapshot.docs.isNotEmpty) return true;
+      }
+      return false;
+    } catch (e) {
+      log("Error checking duplicate: $e");
+      return false;
+    }
   }
 
-  saveArticle({
+  Future<bool> checkIfSaved(
+      {required String title, required String url}) async {
+    return await isDuplicate(title: title, url: url);
+  }
+
+  Future<void> removeSavedArticle({
+    required String url,
+    required String title,
+  }) async {
+    try {
+      QuerySnapshot querySnapshot;
+      if (url.isNotEmpty) {
+        querySnapshot = await articlelist.where('url', isEqualTo: url).get();
+      } else {
+        querySnapshot =
+            await articlelist.where('title', isEqualTo: title).get();
+      }
+      for (var doc in querySnapshot.docs) {
+        await doc.reference.delete();
+      }
+      issaved = false;
+      notifyListeners();
+    } catch (e) {
+      log("Error removing article: $e");
+    }
+  }
+
+  Future<String?> saveArticle({
     required String url,
     required String title,
     required String imgurl,
@@ -55,34 +90,35 @@ class HomeScreenController with ChangeNotifier {
       "title": title,
       "imgurl": imgurl,
       "content": content,
-      "author": author
+      "author": author,
+      "createdAt": FieldValue.serverTimestamp(),
     };
     try {
-      bool response = await isDuplicate(
-          title: title, imgurl: imgurl, content: content, author: author);
-      if (response == true) {
+      bool duplicate = await isDuplicate(title: title, url: url);
+      if (duplicate) {
         log("Already saved");
+        issaved = true;
+        notifyListeners();
+        return null;
       } else {
-        articlelist.add(data).then((documentSnapshot) =>
-            print("Added Data with ID: ${documentSnapshot.id}"));
+        DocumentReference docRef = await articlelist.add(data);
+        log("Added Data with ID: ${docRef.id}");
+        issaved = true;
+        notifyListeners();
+        return null; // Success
       }
     } catch (e) {
-      print(e);
+      log("Error saving article: $e");
+      return e.toString();
     }
   }
 
   Future<void> getNewsbyCategory({required String categoryname}) async {
-    final url = Uri.parse(
-        'https://newsapi.org/v2/top-headlines?category=$categoryname&apiKey=48264279477343ca81a8cbb122807810');
     try {
       isloading = true;
       notifyListeners();
-      var response = await http.get(url);
-      if (response.statusCode == 200) {
-        NewsCategoryresModel newsCategoryresModel =
-            newsCategoryresModelFromJson(response.body);
-        articles = newsCategoryresModel.articles ?? [];
-      }
+      var response = await apiService.getnews(categoryname);
+      articles = response.articles ?? [];
     } catch (e) {
       print(e);
     }
@@ -96,17 +132,11 @@ class HomeScreenController with ChangeNotifier {
   }
 
   Future<void> searchNews({required String searchitem}) async {
-    final url = Uri.parse(
-        'https://newsapi.org/v2/everything?q=$searchitem&apiKey=48264279477343ca81a8cbb122807810');
     try {
       isloading = true;
       notifyListeners();
-      var response = await http.get(url);
-      if (response.statusCode == 200) {
-        NewsCategoryresModel newsCategoryresModel =
-            newsCategoryresModelFromJson(response.body);
-        articles1 = newsCategoryresModel.articles ?? [];
-      }
+      var response = await apiService.searchnews(searchitem);
+      articles1 = response.articles ?? [];
     } catch (e) {
       print(e);
     }

@@ -19,7 +19,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController searchController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<String> categoryList = [
@@ -80,11 +79,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   AppBar _buildAppBarSection() {
     return AppBar(
+      elevation: 0,
       leading: Consumer<HomeScreenController>(
         builder: (context, provider, _) => provider.issearckclicked
             ? IconButton(
-                onPressed: () => provider.clicksearch(),
-                icon: const Icon(Icons.cancel, color: Colors.white),
+                onPressed: () {
+                  searchController.clear();
+                  provider.clicksearch();
+                },
+                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
               )
             : IconButton(
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
@@ -110,10 +113,10 @@ class _HomeScreenState extends State<HomeScreen> {
         Consumer<HomeScreenController>(
           builder: (context, homecontroller, child) =>
               homecontroller.issearckclicked
-                  ? SizedBox()
+                  ? const SizedBox()
                   : IconButton(
                       onPressed: () => homecontroller.clicksearch(),
-                      icon: Icon(Icons.search_rounded, color: Colors.white),
+                      icon: const Icon(Icons.search_rounded, color: Colors.white),
                     ),
         ),
       ],
@@ -121,35 +124,94 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSearchField() {
-    return Form(
-      key: _formKey,
-      child: TextFormField(
+    return SizedBox(
+      height: 42,
+      child: TextField(
         controller: searchController,
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please enter some text';
-          }
-          return null;
+        autofocus: true,
+        textInputAction: TextInputAction.search,
+        onChanged: (value) {
+          setState(() {});
         },
-        textAlign: TextAlign.left,
+        onSubmitted: (value) {
+          if (value.trim().isNotEmpty) {
+            context
+                .read<HomeScreenController>()
+                .searchNews(searchitem: value.trim());
+          }
+        },
         cursorColor: Colors.white,
-        style: TextStyle(color: Colors.white),
+        style: GoogleFonts.poppins(
+          fontSize: 14,
+          color: Colors.white,
+        ),
         decoration: InputDecoration(
-          suffixIcon: IconButton(
+          hintText: 'Search news...',
+          hintStyle: GoogleFonts.poppins(
+            fontSize: 14,
+            color: Colors.white70,
+          ),
+          prefixIcon: IconButton(
             onPressed: () {
-              if (_formKey.currentState?.validate() ?? false) {
+              if (searchController.text.trim().isNotEmpty) {
                 context
                     .read<HomeScreenController>()
-                    .searchNews(searchitem: searchController.text);
-                searchController.clear();
+                    .searchNews(searchitem: searchController.text.trim());
               }
             },
-            icon: Icon(Icons.search, color: Colors.white),
+            icon: const Icon(
+              Icons.search_rounded,
+              color: Colors.white70,
+              size: 20,
+            ),
           ),
-          fillColor: Colorconstants.greycolor.withOpacity(0.6),
+          suffixIcon: searchController.text.isNotEmpty
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        searchController.clear();
+                        setState(() {});
+                      },
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Colors.white70,
+                        size: 18,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        if (searchController.text.trim().isNotEmpty) {
+                          context
+                              .read<HomeScreenController>()
+                              .searchNews(searchitem: searchController.text.trim());
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ],
+                )
+              : null,
           filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.22),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
             borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: const BorderSide(color: Colors.white54, width: 1),
           ),
         ),
       ),
@@ -177,6 +239,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               logincontroller.currentuserphoto!,
                               height: 50,
                               fit: BoxFit.cover,
+                              headers: const {
+                                'User-Agent':
+                                    'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+                                'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                              },
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Image.asset(
+                                ImageConstants.wirenewslogopng,
+                                height: 60,
+                                fit: BoxFit.cover,
+                              ),
                             )
                           : Image.asset(
                               ImageConstants.wirenewslogopng,

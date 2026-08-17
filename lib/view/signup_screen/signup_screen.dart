@@ -166,7 +166,8 @@ class _SignupScreenState extends State<SignupScreen> {
                               password: passwordcontroller.text,
                               email: emailcontroller.text,
                               context: context);
-                          if (success) {
+                          if (!context.mounted) return;
+                          if (success == true) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -251,7 +252,8 @@ class _SignupScreenState extends State<SignupScreen> {
                               var success = await context
                                   .read<LoginScreenController>()
                                   .googleSignin();
-                              if (success) {
+                              if (!context.mounted) return;
+                              if (success == true) {
                                 Navigator.pushAndRemoveUntil(
                                   context,
                                   MaterialPageRoute(

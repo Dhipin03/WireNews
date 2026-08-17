@@ -125,7 +125,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               email: emailcontroller.text,
                               password: passwordcontroller.text,
                               context: context);
-                          if (success) {
+                          if (!context.mounted) return;
+                          if (success == true) {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
@@ -209,7 +210,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             onTap: () async {
                               var success =
                                   await loginController.googleSignin();
-                              if (success) {
+                              if (!context.mounted) return;
+                              if (success == true) {
                                 Navigator.pushAndRemoveUntil(
                                   context,
                                   MaterialPageRoute(

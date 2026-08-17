@@ -40,12 +40,32 @@ class _NewscardWidgetState extends State<NewscardWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Image.network(
-              width: double.infinity,
-              height: 100,
-              fit: BoxFit.cover,
-              widget.imgurl == ''
-                  ? ImageConstants.noimagetodisplay
-                  : widget.imgurl),
+            widget.imgurl.isEmpty
+                ? ImageConstants.noimagetodisplay
+                : widget.imgurl,
+            width: double.infinity,
+            height: 100,
+            fit: BoxFit.cover,
+            headers: const {
+              'User-Agent':
+                  'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+              'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: double.infinity,
+                height: 100,
+                color: Colors.grey.shade200,
+                child: Center(
+                  child: Image.asset(
+                    ImageConstants.wirenewslogopng,
+                    height: 50,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              );
+            },
+          ),
           const SizedBox(height: 5),
           Expanded(
             child: Padding(
